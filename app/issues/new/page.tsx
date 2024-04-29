@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createIssueSchema } from "@/app/validationSchemas";
 import { z } from "zod";
+import ErrorMessage from "@/app/components/ErrorMessage";
 
 type IssueFrom = z.infer<typeof createIssueSchema>;
 
@@ -18,40 +19,49 @@ interface IssueForm {
 }
 
 const NewIssuePage = () => {
-    const router = useRouter();
-  const { register, control, handleSubmit, formState:{ errors} } = useForm<IssueForm>({
+  const router = useRouter();
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<IssueForm>({
     resolver: zodResolver(createIssueSchema),
   });
-  const [error,setError] = useState('');
+  const [error, setError] = useState("");
   return (
     <div className="max-w-xl space-y-3">
-        {error && <Callout.Root color="red" className="mb-5">
-                <Callout.Text>{error}</Callout.Text>
-            </Callout.Root>}
-    <form
-      className="max-w-xl space-y-3"
-      onSubmit={handleSubmit(async (data) => {
-        try {
-            await axios.post("/api/issues", data)
-            router.push("/issues")
-        } catch (error) {
-            console.log(error)
-            setError("An uepected error occured")
-        }
-      })}
-    >
-      <TextField.Root placeholder="title" {...register("title")} />
-      {errors.title && <Text color="red">{errors.title.message}</Text>}
-      <Controller
-        name="description"
-        control={control}
-        render={({ field }) => (
-          <SimpleMDE placeholder="description" {...field} />
+      {error && (
+        <Callout.Root color="red" className="mb-5">
+          <Callout.Text>{error}</Callout.Text>
+        </Callout.Root>
+      )}
+      <form
+        className="max-w-xl space-y-3"
+        onSubmit={handleSubmit(async (data) => {
+          try {
+            await axios.post("/api/issues", data);
+            router.push("/issues");
+          } catch (error) {
+            console.log(error);
+            setError("An uepected error occured");
+          }
+        })}
+      >
+        <TextField.Root placeholder="title" {...register("title")} />
+        {errors.title && <ErrorMessage>{errors.title?.message}</ErrorMessage>}
+        <Controller
+          name="description"
+          control={control}
+          render={({ field }) => (
+            <SimpleMDE placeholder="description" {...field} />
+          )}
+        />
+        {errors.description && (
+          <ErrorMessage>{errors.description?.message}</ErrorMessage>
         )}
-      />
-      {errors.description && <Text color="red" as="p">{errors.description.message}</Text>}
-      <Button>Submit new Issue</Button>
-    </form>
+        <Button>Submit new Issue</Button>
+      </form>
     </div>
   );
 };
